@@ -101,6 +101,18 @@ def cmd_list_models(args):
     run_command(cmd)
 
 
+def cmd_test_slack(args):
+    """Test Slack webhook"""
+    skill = args.skill or "FastAPI"
+    print(f"📨 Sending test Slack message for skill: {skill}...")
+    cmd = ["curl", "-X", "POST", f"http://localhost:8000/api/research/send-test-slack?skill={skill}"]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    print(result.stdout)
+    if result.returncode != 0:
+        print("❌ Failed to send test Slack message")
+        return 1
+
+
 def cmd_shell_db(args):
     """Connect to PostgreSQL"""
     print("🛢️  Connecting to PostgreSQL...")
@@ -197,6 +209,15 @@ Examples:
 
     subparsers.add_parser("list-models", help="List available models in Ollama")
 
+    # Slack
+    slack_parser = subparsers.add_parser("test-slack", help="Test Slack webhook integration")
+    slack_parser.add_argument(
+        "skill",
+        nargs="?",
+        default="FastAPI",
+        help="Skill to include in test message (default: FastAPI)",
+    )
+
     # Database
     subparsers.add_parser("shell-db", help="Connect to PostgreSQL")
 
@@ -217,6 +238,7 @@ Examples:
         "health": cmd_health,
         "pull-model": cmd_pull_model,
         "list-models": cmd_list_models,
+        "test-slack": cmd_test_slack,
         "shell-db": cmd_shell_db,
         "clean": cmd_clean,
     }

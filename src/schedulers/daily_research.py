@@ -10,6 +10,8 @@ from src.config import settings
 from src.models.database import SessionLocal
 from src.models.database_models import ResearchSession
 from src.services.news_aggregator import news_aggregator
+from src.services.skills import skill_rotation
+from src.services.slack_service import slack_service
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +30,9 @@ def scheduled_research_job():
 
         start_time = time.time()
 
+        # Get today's skill
+        today_skill = skill_rotation.get_today_skill()
+
         # Aggregate
         aggregate_count = news_aggregator.aggregate_daily.__wrapped__(db)
         session.articles_collected = aggregate_count
@@ -39,11 +44,33 @@ def scheduled_research_job():
         execution_time = int(time.time() - start_time)
         session.execution_time_seconds = execution_time
         session.status = "completed"
+        session.skill_focus = today_skill
 
         db.commit()
         logger.info(f"✅ Research job completed in {execution_time}s")
         logger.info(f"   - Articles collected: {aggregate_count}")
         logger.info(f"   - Articles processed: {process_count}")
+        logger.info(f"   - Skill focus: {today_skill}")
+
+        # Send to Slack if enabled
+        if settings.slack_enabled and settings.slack_webhook_url:
+            from src.models.database_models import ResearchArticle
+
+            # Get processed articles for today
+            processed_articles = (
+                db.query(ResearchArticle)
+                .filter(ResearchArticle.processed_at != None)
+                .order_by(ResearchArticle.processed_at.desc())
+                .limit(10)
+                .all()
+            )
+
+            # Filter by skill
+            skill_articles = skill_rotation.filter_articles_by_skill(processed_articles, today_skill)
+
+            if skill_articles:
+                slack_service.send_daily_report(today_skill, skill_articles, execution_time)
+                logger.info(f"✓ Slack report sent for {today_skill}")
 
     except Exception as e:
         logger.error(f"❌ Research job failed: {e}", exc_info=True)

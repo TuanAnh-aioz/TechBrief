@@ -52,6 +52,7 @@ class ResearchSession(Base):
     execution_time_seconds = Column(Integer, nullable=True)
     status = Column(String(20), default="pending")  # pending, running, completed, failed
     error_message = Column(Text, nullable=True)
+    skill_focus = Column(String(100), nullable=True)  # Today's skill focus
 
     def __repr__(self):
         return f"<ResearchSession(id={self.id}, date={self.session_date}, status={self.status})>"

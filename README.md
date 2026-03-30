@@ -4,10 +4,18 @@
 
 ## 🎯 Features
 
-✨ **Daily Automated Research**
+✨ **Daily Automated Research with Skill Rotation**
 - Automatically runs at scheduled times (default: 09:00 AM)
+- Rotates through 15+ AI backend engineering skills (FastAPI, Kubernetes, Docker, etc.)
+- Each day focuses on one skill for targeted research
 - Aggregates tech news from multiple sources (Hacker News, Medium, Dev.to)
 - Stores findings in PostgreSQL database
+
+📨 **Slack Notifications**
+- Daily skill-focused reports sent directly to Slack
+- Beautiful formatted messages with top articles
+- Configure with your Slack webhook URL
+- Automatic report delivery each morning
 
 🤖 **Local AI Synthesis** 
 - Uses Ollama with Mistral/Llama2 for local model inference
@@ -104,6 +112,9 @@ GET /api/research/stats
 # Trigger research manually
 POST /api/research/run-research
 
+# Send test Slack report
+POST /api/research/send-test-slack?skill=FastAPI
+
 # Get research sessions/logs
 GET /api/research/sessions
 ```
@@ -140,6 +151,11 @@ OLLAMA_MODEL=mistral        # Change to: llama2, neural-chat, tinyllama, etc.
 RESEARCH_SCHEDULE_HOUR=09
 RESEARCH_SCHEDULE_MINUTE=00
 
+# Slack Configuration
+SLACK_ENABLED=true
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK
+SLACK_CHANNEL=#techbrief
+
 # Logging
 LOG_LEVEL=INFO
 DEBUG=False
@@ -156,25 +172,75 @@ DEBUG=False
 | `OLLAMA_MODEL` | mistral | AI model to use |
 | `RESEARCH_SCHEDULE_HOUR` | 09 | Daily run hour |
 | `RESEARCH_SCHEDULE_MINUTE` | 00 | Daily run minute |
+| `SLACK_ENABLED` | false | Enable/disable Slack notifications |
+| `SLACK_WEBHOOK_URL` | - | Slack webhook URL for sending messages |
+| `SLACK_CHANNEL` | #techbrief | Slack channel for reports |
 | `LOG_LEVEL` | INFO | Logging verbosity |
+
+### 📨 Slack Configuration
+
+To enable daily Slack reports for skill-focused research:
+
+**1. Create a Slack App:**
+- Go to [api.slack.com/apps](https://api.slack.com/apps)
+- Click "Create New App" → "From scratch"
+- Give your app a name (e.g., "TechBrief")
+- Select your workspace
+
+**2. Enable Incoming Webhooks:**
+- In your app settings, go to "Incoming Webhooks"
+- Toggle "Activate Incoming Webhooks" to ON
+- Click "Add New Webhook to Workspace"
+- Select the channel where you want reports (e.g., #techbrief)
+- Click "Allow"
+
+**3. Configure in `.env`:**
+```env
+SLACK_ENABLED=true
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
+SLACK_CHANNEL=#techbrief
+```
+
+**4. Test the integration:**
+```bash
+# Via API
+curl -X POST "http://localhost:8000/api/research/send-test-slack?skill=FastAPI"
+
+# Via CLI
+./cli.py test-slack Kubernetes
+```
 
 ## 📊 How It Works
 
-### 1. Daily Aggregation (Automated)
+### 1. Daily Skill Rotation
+Every day, the system selects one AI backend engineering skill to focus on:
+- **15+ Skills**: FastAPI, Kubernetes, Docker, PostgreSQL, Redis, GraphQL, Microservices, AWS, GCP, Azure, Terraform, CI/CD, Monitoring, Optimization, Security
+- **Rotation**: Daily schedule cycles through skills (same day = same skill each year)
+- **Focus**: Articles are filtered for relevance to today's skill
+
+### 2. Daily Aggregation (Automated)
 Every day at configured time:
 - **Fetches** RSS feeds from HackerNews, Medium, Dev.to
+- **Filters** articles by today's skill
 - **Stores** new articles in PostgreSQL 
 - **Deduplicates** to avoid re-processing
 - Collects ~15-25 articles daily
 
-### 2. AI Processing (Automated)
+### 3. AI Processing (Automated)
 - **Fetches** article content via web scraping
 - **Generates** 2-3 sentence summaries using Ollama
 - **Extracts** 3-5 technical keywords
 - **Stores** results in database
 - One article processing: 2-5 seconds (depends on model)
 
-### 3. API Access (On-Demand)
+### 4. Slack Notification (Automated)
+If Slack is enabled:
+- **Formats** top articles with summaries
+- **Includes** today's skill focus
+- **Sends** beautiful message to configured Slack channel
+- **Happens** immediately after article processing completes
+
+### 5. API Access (On-Demand)
 - Query articles by date, source, keywords
 - View full summaries and metadata
 - Get aggregate statistics
@@ -270,6 +336,10 @@ chmod +x cli.py
 
 # Database access
 ./cli.py shell-db
+
+# Slack integration
+./cli.py test-slack          # Test with default skill (FastAPI)
+./cli.py test-slack Kubernetes  # Test with specific skill
 
 # Cleanup
 ./cli.py clean
@@ -434,7 +504,9 @@ TechBrief/
 │   │   └── schemas.py           # Pydantic API schemas
 │   ├── services/
 │   │   ├── ollama_service.py    # AI model integration
-│   │   └── news_aggregator.py   # News fetching & processing
+│   │   ├── news_aggregator.py   # News fetching & processing
+│   │   ├── slack_service.py     # Slack webhook integration
+│   │   └── skills.py            # Skill rotation system
 │   ├── api/
 │   │   └── routes.py        # FastAPI routes/endpoints
 │   └── schedulers/
@@ -479,7 +551,8 @@ CREATE TABLE research_sessions (
   articles_summarized INT,      -- How many processed
   execution_time_seconds INT,   -- Total time
   status VARCHAR(20),           -- pending, running, completed, failed
-  error_message TEXT
+  error_message TEXT,
+  skill_focus VARCHAR(100)      -- Today's skill (e.g., 'FastAPI', 'Kubernetes')
 );
 ```
 

@@ -35,6 +35,11 @@ class Settings(BaseSettings):
         "dev_to",
     ]
 
+    # Slack Configuration
+    slack_enabled: bool = False
+    slack_webhook_url: Optional[str] = None
+    slack_channel: str = "#techbrief"
+
     model_config = {
         "extra": Extra.ignore,
         "env_file": ".env",

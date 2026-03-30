@@ -135,6 +135,43 @@ async def get_sessions(skip: int = 0, limit: int = 10, db: Session = Depends(get
     return sessions
 
 
+@router.post("/send-test-slack")
+async def send_test_slack(skill: str = "FastAPI", db: Session = Depends(get_db)):
+    """Send a test Slack message with sample articles"""
+    from src.config import settings
+    from src.services.skills import skill_rotation
+    from src.services.slack_service import slack_service
+
+    if not settings.slack_enabled or not settings.slack_webhook_url:
+        raise HTTPException(status_code=400, detail="Slack is not enabled")
+
+    # Get recent processed articles
+    articles = (
+        db.query(ResearchArticle)
+        .filter(ResearchArticle.ai_summary != None)
+        .order_by(ResearchArticle.processed_at.desc())
+        .limit(10)
+        .all()
+    )
+
+    if not articles:
+        raise HTTPException(status_code=404, detail="No processed articles found")
+
+    # Filter by skill
+    skill_articles = skill_rotation.filter_articles_by_skill(articles, skill)
+
+    if not skill_articles:
+        skill_articles = articles  # Fall back to all articles if none match skill
+
+    # Send test report
+    success = slack_service.send_daily_report(skill, skill_articles, 15)
+
+    if success:
+        return {"message": "Test Slack message sent successfully", "skill": skill, "article_count": len(skill_articles)}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to send Slack message")
+
+
 def execute_research(session_id: int, db: Session):
     """Background task to execute research"""
 
