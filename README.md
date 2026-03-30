@@ -1,4 +1,4 @@
-# TechBrief - AI Backend Engineer Research System
+# TechBrief - Research Technical System
 
 **TechBrief** is an autonomous research and information synthesis system designed for AI backend engineers. It aggregates tech news daily, synthesizes insights using local AI models, and provides a REST API for accessing research findings.
 
@@ -6,7 +6,7 @@
 
 ✨ **Daily Automated Research with Skill Rotation**
 - Automatically runs at scheduled times (default: 09:00 AM)
-- Rotates through 15+ AI backend engineering skills (FastAPI, Kubernetes, Docker, etc.)
+- Rotates through 15+ technical skills (FastAPI, Kubernetes, Docker, etc.)
 - Each day focuses on one skill for targeted research
 - Aggregates tech news from multiple sources (Hacker News, Medium, Dev.to)
 - Stores findings in PostgreSQL database
@@ -213,7 +213,7 @@ curl -X POST "http://localhost:8000/api/research/send-test-slack?skill=FastAPI"
 ## 📊 How It Works
 
 ### 1. Daily Skill Rotation
-Every day, the system selects one AI backend engineering skill to focus on:
+Every day, the system selects one technical skill to focus on:
 - **15+ Skills**: FastAPI, Kubernetes, Docker, PostgreSQL, Redis, GraphQL, Microservices, AWS, GCP, Azure, Terraform, CI/CD, Monitoring, Optimization, Security
 - **Rotation**: Daily schedule cycles through skills (same day = same skill each year)
 - **Focus**: Articles are filtered for relevance to today's skill
@@ -258,7 +258,7 @@ curl http://localhost:8000/api/research/articles/today | jq '.[] | {title, summa
 {
   "id": 1,
   "source": "hacker_news",
-  "title": "Building Production-Ready AI Backend Systems",
+  "title": "Building Production-Ready Technical Systems",
   "url": "https://news.ycombinator.com/item?id=39123456",
   "ai_summary_short": "Article discusses best practices for deploying ML models in production, covering containerization, monitoring, and scaling strategies...",
   "keywords": "backend, ML, deployment, infrastructure",

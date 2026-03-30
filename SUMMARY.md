@@ -2,7 +2,7 @@
 
 ## ✅ Project Complete!
 
-A fully functional **AI-powered automated research system** has been created for AI backend engineers with:
+A fully functional **AI-powered automated research system** has been created for technical with:
 - ✅ Daily automated tech research aggregation
 - ✅ Local Ollama AI model integration  
 - ✅ FastAPI REST API server
