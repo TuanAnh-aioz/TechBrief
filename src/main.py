@@ -1,20 +1,20 @@
 """Main FastAPI application"""
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
+
 import logging
 import sys
+from contextlib import asynccontextmanager
 
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from src.api.routes import router
 from src.config import settings
 from src.models.database import init_db
-from src.api.routes import router
 from src.schedulers.daily_research import start_scheduler, stop_scheduler
 
 # Configure logging
 logging.basicConfig(
-    level=settings.log_level,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    stream=sys.stdout
+    level=settings.log_level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", stream=sys.stdout
 )
 
 logger = logging.getLogger(__name__)
@@ -28,9 +28,9 @@ async def lifespan(app: FastAPI):
     init_db()
     start_scheduler()
     logger.info("✓ Application started successfully")
-    
+
     yield
-    
+
     # Shutdown
     logger.info("🛑 Shutting down...")
     stop_scheduler()
@@ -42,7 +42,7 @@ app = FastAPI(
     title="TechBrief Research System",
     description="AI-powered daily tech news research and synthesis",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Add CORS middleware
@@ -66,7 +66,7 @@ async def root():
         "version": "1.0.0",
         "description": "AI-powered daily tech news research and synthesis",
         "docs": "/docs",
-        "health": "/api/research/health"
+        "health": "/api/research/health",
     }
 
 
@@ -77,15 +77,11 @@ async def status():
         "status": "running",
         "scheduler_enabled": settings.scheduler_enabled,
         "ollama_url": settings.ollama_base_url,
-        "database_configured": bool(settings.database_url)
+        "database_configured": bool(settings.database_url),
     }
 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=8000,
-        log_level=settings.log_level.lower()
-    )
+
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level=settings.log_level.lower())

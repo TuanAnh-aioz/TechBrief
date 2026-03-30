@@ -1,11 +1,12 @@
-from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
-from enum import Enum
+
+from pydantic import BaseModel
 
 
 class ResearchArticleResponse(BaseModel):
     """Schema for research article API responses"""
+
     id: int
     source: str
     title: str
@@ -23,6 +24,7 @@ class ResearchArticleResponse(BaseModel):
 
 class ResearchSessionResponse(BaseModel):
     """Schema for research session API responses"""
+
     id: int
     session_date: datetime
     articles_collected: int
@@ -37,6 +39,7 @@ class ResearchSessionResponse(BaseModel):
 
 class ResearchStatsResponse(BaseModel):
     """Daily research statistics"""
+
     total_articles: int
     summarized_count: int
     average_relevance_score: float

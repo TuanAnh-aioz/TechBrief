@@ -6,7 +6,6 @@ TechBrief CLI - Management tool for the research system
 import argparse
 import subprocess
 import sys
-import os
 from pathlib import Path
 
 
@@ -55,10 +54,7 @@ def cmd_logs(args):
 def cmd_research(args):
     """Trigger research manually"""
     print("🔬 Triggering research job...")
-    cmd = [
-        "curl", "-X", "POST", 
-        "http://localhost:8000/api/research/run-research"
-    ]
+    cmd = ["curl", "-X", "POST", "http://localhost:8000/api/research/run-research"]
     result = subprocess.run(cmd, capture_output=True, text=True)
     print(result.stdout)
     if result.returncode != 0:
@@ -93,7 +89,7 @@ def cmd_pull_model(args):
     model = args.model or "mistral"
     print(f"📥 Pulling model: {model}")
     print("   (This may take 5-10 minutes depending on model size)")
-    
+
     cmd = f"docker exec techbrief_ollama ollama pull {model}".split()
     run_command(cmd)
 
@@ -108,10 +104,7 @@ def cmd_list_models(args):
 def cmd_shell_db(args):
     """Connect to PostgreSQL"""
     print("🛢️  Connecting to PostgreSQL...")
-    cmd = [
-        "docker", "exec", "-it", "techbrief_db", 
-        "psql", "-U", "postgres", "-d", "techbrief_db"
-    ]
+    cmd = ["docker", "exec", "-it", "techbrief_db", "psql", "-U", "postgres", "-d", "techbrief_db"]
     subprocess.run(cmd)
 
 
@@ -129,26 +122,26 @@ def cmd_clean(args):
 def cmd_init(args):
     """Initialize system"""
     print("⚙️  Initializing TechBrief...")
-    
+
     # Check Docker
     try:
         subprocess.run(["docker", "--version"], capture_output=True, check=True)
-    except:
+    except Exception:
         print("❌ Docker not found. Please install Docker first.")
         return 1
-    
+
     # Create .env if not exists
     if not Path(".env").exists():
         print("📝 Creating .env from .env.example...")
         subprocess.run(["cp", ".env.example", ".env"])
-    
+
     # Start services
     cmd_start(args)
-    
+
     # Pull default model
     print("📥 Pulling mistral model (10-15 min, can be customized later)...")
     docker_exec("techbrief_ollama", "ollama pull mistral")
-    
+
     print("✅ Initialization complete!")
     print("📖 Read the README.md for detailed instructions")
 
@@ -167,46 +160,51 @@ Examples:
   ./cli.py logs backend      # View backend logs
   ./cli.py pull-model llama2 # Change model
   ./cli.py shell-db          # Connect to database
-        """
+        """,
     )
-    
+
     subparsers = parser.add_subparsers(dest="command", help="Command to run")
-    
+
     # Initialize
     subparsers.add_parser("init", help="Initialize system (first time setup)")
-    
+
     # Start/Stop
     subparsers.add_parser("start", help="Start all services")
     subparsers.add_parser("stop", help="Stop all services")
-    
+
     # Logs
     logs_parser = subparsers.add_parser("logs", help="View service logs")
-    logs_parser.add_argument("service", nargs="?", default="backend",
-                            help="Service: backend, postgres, ollama (default: backend)")
-    
+    logs_parser.add_argument(
+        "service", nargs="?", default="backend", help="Service: backend, postgres, ollama (default: backend)"
+    )
+
     # Research
     subparsers.add_parser("research", help="Trigger research job manually")
-    
+
     # Articles/Stats
     subparsers.add_parser("articles", help="Get latest articles")
     subparsers.add_parser("stats", help="Get research statistics")
     subparsers.add_parser("health", help="Check system health")
-    
+
     # Models
     pull_parser = subparsers.add_parser("pull-model", help="Pull Ollama model")
-    pull_parser.add_argument("model", nargs="?", default="mistral",
-                            help="Model name (default: mistral). Examples: llama2, neural-chat, tinyllama")
-    
+    pull_parser.add_argument(
+        "model",
+        nargs="?",
+        default="mistral",
+        help="Model name (default: mistral). Examples: llama2, neural-chat, tinyllama",
+    )
+
     subparsers.add_parser("list-models", help="List available models in Ollama")
-    
+
     # Database
     subparsers.add_parser("shell-db", help="Connect to PostgreSQL")
-    
+
     # Cleanup
     subparsers.add_parser("clean", help="Remove all data and containers")
-    
+
     args = parser.parse_args()
-    
+
     # Map commands to functions
     commands = {
         "init": cmd_init,
@@ -222,11 +220,11 @@ Examples:
         "shell-db": cmd_shell_db,
         "clean": cmd_clean,
     }
-    
+
     if args.command not in commands:
         parser.print_help()
         return 0
-    
+
     return commands[args.command](args) or 0
 
 

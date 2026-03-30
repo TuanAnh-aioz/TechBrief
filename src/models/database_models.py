@@ -1,13 +1,15 @@
-from datetime import datetime
-from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, Enum
-from sqlalchemy.ext.declarative import declarative_base
 import enum
+from datetime import datetime
+
+from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text
+from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
 
 class NewsSource(str, enum.Enum):
     """News source types"""
+
     HACKER_NEWS = "hacker_news"
     TECH_CRUNCH = "tech_crunch"
     MEDIUM = "medium"
@@ -17,6 +19,7 @@ class NewsSource(str, enum.Enum):
 
 class ResearchArticle(Base):
     """Model for storing research articles and summaries"""
+
     __tablename__ = "research_articles"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -32,13 +35,14 @@ class ResearchArticle(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     published_at = Column(DateTime, nullable=True)
     processed_at = Column(DateTime, nullable=True)
-    
+
     def __repr__(self):
         return f"<ResearchArticle(id={self.id}, title={self.title[:50]}...)>"
 
 
 class ResearchSession(Base):
     """Model for tracking daily research sessions"""
+
     __tablename__ = "research_sessions"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -48,6 +52,6 @@ class ResearchSession(Base):
     execution_time_seconds = Column(Integer, nullable=True)
     status = Column(String(20), default="pending")  # pending, running, completed, failed
     error_message = Column(Text, nullable=True)
-    
+
     def __repr__(self):
         return f"<ResearchSession(id={self.id}, date={self.session_date}, status={self.status})>"
